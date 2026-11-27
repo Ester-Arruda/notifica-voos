@@ -41,9 +41,9 @@ O Render usa UTC. O agendamento acima corresponde a **09h e 21h de Brasília**.
       "origem": "GIG",
       "destino": "POA",
       "data_ida": "2026-12-18",
-      "data_ida_ate": "2026-12-20",
+      "data_ida_ate": "2026-12-19",
       "data_volta": "2026-12-27",
-      "data_volta_ate": "2026-12-29",
+      "data_volta_ate": "2026-12-28",
       "adultos": 1,
       "preco_maximo": 4000
     }
@@ -64,17 +64,16 @@ Para uma data única, remova o campo `_ate`. Para só ida, remova `data_volta` e
 
 ## Quantas datas podem ser consultadas
 
-**Recomendado: até 3 datas de ida e 3 de volta por viagem.** O script não bloqueia intervalos maiores.
+**Configuração atual: 2 datas de ida e 2 de volta por viagem**, que dão 4 combinações. Como `buscas_por_execucao` também é 4, todas as combinações são consultadas em **cada** execução, sem rodízio.
 
-O exemplo gera 9 combinações:
+| Ida \ Volta | 27/12 | 28/12 |
+|---|---|---|
+| **18/12** | 1 | 2 |
+| **19/12** | 3 | 4 |
 
-| Ida \ Volta | 27/12 | 28/12 | 29/12 |
-|---|---|---|---|
-| **18/12** | 1 | 2 | 3 |
-| **19/12** | 4 | 5 | 6 |
-| **20/12** | 7 | 8 | 9 |
+Com 2 execuções ao dia, são 8 buscas por dia e cada combinação é verificada a cada cerca de 12 horas.
 
-As combinações são consultadas em rodízio. Com 4 por execução e 2 execuções ao dia, são 8 buscas por dia e cada combinação é verificada a cada cerca de 27 horas. Intervalos maiores aumentam esse tempo.
+Se quiser comparar mais datas, o script não bloqueia intervalos maiores. Com 3 ida × 3 volta (9 combinações) e `buscas_por_execucao: 4`, as combinações passam a ser consultadas em rodízio, e cada uma é verificada a cada cerca de 27 horas. O consumo de buscas é o mesmo.
 
 ## Limites de uso e custos
 
@@ -96,8 +95,6 @@ Valores consultados em 27/11/2026. Confira as páginas oficiais, pois podem muda
 
 Execuções manuais (**Trigger Run**) também consomem buscas. Com a configuração atual (1 viagem, 4 por execução) sobram cerca de 2 buscas por mês, então um único teste manual já consome 4. Antes de testar, confira o saldo no painel da SerpApi. Se a cota acabar, o monitor para de consultar até ela renovar.
 
-Configuração de horarios 9h e 21h no Render.
-
 ### Render
 
 - Workspace Hobby: US$ 0.
@@ -111,13 +108,13 @@ Referências: [preços da SerpApi](https://serpapi.com/pricing), [preços do Ren
 2. No Render, abra **Runs → Trigger Run**.
 3. Confira nos logs as datas consultadas e a quantidade de ofertas.
 
-O Trigger Run manual não avança o rodízio: ele consulta as combinações correspondentes à faixa de horário atual, então dois testes seguidos consultam as mesmas datas e gastam buscas a mais.
+Cada Trigger Run consulta as 4 combinações e gasta 4 buscas.
 
 O e-mail só é enviado quando há oferta abaixo do limite. O assunto é **"Passagem abaixo do seu limite"**.
 
 ## Observações
 
 - Enquanto houver preço abaixo do limite, o alerta pode se repetir.
-- Cada e-mail traz apenas as combinações consultadas naquela execução.
-- Uma promoção que dure poucas horas pode passar despercebida entre uma execução e outra.
+- Cada e-mail traz as 4 combinações consultadas naquela execução.
+- Uma promoção que dure menos de 12 horas pode passar despercebida entre uma execução e outra.
 - Confirme o preço no Google Flights antes de comprar.
