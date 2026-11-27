@@ -2,6 +2,10 @@
 
 Consulta preços do Google Flights 2 vezes ao dia e envia um e-mail quando encontra passagens abaixo do valor definido.
 
+> [!IMPORTANT]
+> ## ✈️ Configuração atual: 2 datas de ida e 2 de volta por viagem
+> São 4 combinações, todas consultadas em **cada** execução (09h e 21h de Brasília). Não altere o número de datas sem revisar `buscas_por_execucao` e o limite de 250 buscas por mês da SerpApi.
+
 ## O que é usado
 
 - **[Render](https://render.com)**: executa o script como Cron Job.
@@ -64,7 +68,7 @@ Para uma data única, remova o campo `_ate`. Para só ida, remova `data_volta` e
 
 ## Quantas datas podem ser consultadas
 
-**Configuração atual: 2 datas de ida e 2 de volta por viagem**, que dão 4 combinações. Como `buscas_por_execucao` também é 4, todas as combinações são consultadas em **cada** execução, sem rodízio.
+A configuração atual usa 2 datas de ida e 2 de volta por viagem, que dão 4 combinações. Como `buscas_por_execucao` também é 4, todas as combinações são consultadas em **cada** execução, sem rodízio.
 
 | Ida \ Volta | 27/12 | 28/12 |
 |---|---|---|
