@@ -1,6 +1,6 @@
 # Monitor de passagens aéreas
 
-Consulta preços do Google Flights 3 vezes ao dia e envia um e-mail quando encontra passagens abaixo do valor definido.
+Consulta preços do Google Flights 2 vezes ao dia e envia um e-mail quando encontra passagens abaixo do valor definido.
 
 ## O que é usado
 
@@ -25,17 +25,17 @@ Consulta preços do Google Flights 3 vezes ao dia e envia um e-mail quando encon
 | Language | Python 3 |
 | Build Command | `pip install -r requirements.txt` |
 | Command | `python monitor.py` |
-| Schedule | `0 2,12,18 * * *` |
+| Schedule | `0 0,12 * * *` |
 | Instance Type | 512 MB |
 | Auto-Deploy | On Commit |
 
-O Render usa UTC. O agendamento acima corresponde a **09h, 15h e 23h de Brasília**.
+O Render usa UTC. O agendamento acima corresponde a **09h e 21h de Brasília**.
 
 ## Exemplo de `config.json`
 
 ```json
 {
-  "buscas_por_execucao": 2,
+  "buscas_por_execucao": 4,
   "voos": [
     {
       "origem": "GIG",
@@ -74,7 +74,7 @@ O exemplo gera 9 combinações:
 | **19/12** | 4 | 5 | 6 |
 | **20/12** | 7 | 8 | 9 |
 
-As combinações são consultadas em rodízio. Com 2 por execução, todas são verificadas em cerca de 1 dia e meio. Intervalos maiores aumentam esse tempo.
+As combinações são consultadas em rodízio. Com 4 por execução e 2 execuções ao dia, são 8 buscas por dia e cada combinação é verificada a cada cerca de 27 horas. Intervalos maiores aumentam esse tempo.
 
 ## Limites de uso e custos
 
@@ -87,12 +87,16 @@ Valores consultados em 27/11/2026. Confira as páginas oficiais, pois podem muda
 
 | Viagens | `buscas_por_execucao` | Buscas em um mês de 31 dias | Cabe no plano grátis? |
 |---|---|---|---|
-| 1 | 2 | até 186 | Sim |
-| 2 | 1 | até 186 | Sim |
-| 2 | 2 | até 372 | Não |
-| 1 | 3 | até 279 | Não |
+| 1 | 4 | até 248 | Sim, quase sem sobra |
+| 1 | 3 | até 186 | Sim |
+| 2 | 2 | até 248 | Sim, quase sem sobra |
+| 2 | 1 | até 124 | Sim |
+| 1 | 5 | até 310 | Não |
+| 2 | 3 | até 372 | Não |
 
-Execuções manuais (**Trigger Run**) também consomem buscas.
+Execuções manuais (**Trigger Run**) também consomem buscas. Com a configuração atual (1 viagem, 4 por execução) sobram cerca de 2 buscas por mês, então um único teste manual já consome 4. Antes de testar, confira o saldo no painel da SerpApi. Se a cota acabar, o monitor para de consultar até ela renovar.
+
+Configuração de horarios 9h e 21h no Render.
 
 ### Render
 
@@ -107,10 +111,13 @@ Referências: [preços da SerpApi](https://serpapi.com/pricing), [preços do Ren
 2. No Render, abra **Runs → Trigger Run**.
 3. Confira nos logs as datas consultadas e a quantidade de ofertas.
 
+O Trigger Run manual não avança o rodízio: ele consulta as combinações correspondentes à faixa de horário atual, então dois testes seguidos consultam as mesmas datas e gastam buscas a mais.
+
 O e-mail só é enviado quando há oferta abaixo do limite. O assunto é **"Passagem abaixo do seu limite"**.
 
 ## Observações
 
 - Enquanto houver preço abaixo do limite, o alerta pode se repetir.
 - Cada e-mail traz apenas as combinações consultadas naquela execução.
+- Uma promoção que dure poucas horas pode passar despercebida entre uma execução e outra.
 - Confirme o preço no Google Flights antes de comprar.
