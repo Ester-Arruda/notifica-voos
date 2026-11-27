@@ -33,6 +33,38 @@ def buscar(voo):
     return dados
 
 
+def datas(inicio, fim):
+    d = date.fromisoformat(inicio)
+    ultima = date.fromisoformat(fim or inicio)
+    if ultima < d:
+        raise ValueError(f"intervalo de datas invertido: {inicio} até {fim}")
+    while d <= ultima:
+        yield d.isoformat()
+        d += timedelta(days=1)
+
+
+def combinacoes(voo, hoje):
+    """Todas as combinações de ida e volta ainda válidas."""
+    voltas = [None]
+    if voo.get("data_volta"):
+        voltas = list(datas(voo["data_volta"], voo.get("data_volta_ate")))
+    return [
+        {**voo, "data_ida": ida, "data_volta": volta}
+        for ida in datas(voo["data_ida"], voo.get("data_ida_ate"))
+        for volta in voltas
+        if date.fromisoformat(ida) >= hoje and (volta is None or volta >= ida)
+    ]
+
+
+def lote(itens, tamanho, agora):
+    """Reveza as combinações entre as execuções (02h, 12h e 18h UTC), sem guardar estado."""
+    if len(itens) <= tamanho:
+        return itens
+    turno = 0 if agora.hour < 12 else 1 if agora.hour < 18 else 2
+    inicio = (agora.date().toordinal() * 3 + turno) * tamanho
+    return [itens[(inicio + i) % len(itens)] for i in range(tamanho)]
+
+
 def ofertas_abaixo(dados, limite):
     todas = dados.get("best_flights", []) + dados.get("other_flights", [])
     boas = [o for o in todas if o.get("price") and o["price"] < limite]
@@ -67,26 +99,30 @@ def enviar_email(corpo):
 
 def main():
     with open("config.json", encoding="utf-8") as arquivo:
-        voos = json.load(arquivo)["voos"]
+        config = json.load(arquivo)
+    por_execucao = config.get("buscas_por_execucao", 2)  # por viagem
 
-    hoje = datetime.now(timezone(timedelta(hours=-3))).date()
+    agora = datetime.now(timezone.utc)
+    hoje = agora.astimezone(timezone(timedelta(hours=-3))).date()
     alertas, falhas = [], 0
 
-    for voo in voos:
-        rota = f"{voo['origem']}-{voo['destino']} {voo['data_ida']}"
-        if date.fromisoformat(voo["data_ida"]) < hoje:
-            print(f"{rota}: data já passou, ignorando")
+    for viagem in config["voos"]:
+        todas = combinacoes(viagem, hoje)
+        if not todas:
+            print(f"{viagem['origem']}-{viagem['destino']}: nenhuma data futura, ignorando")
             continue
-        try:
-            dados = buscar(voo)
-            ofertas = ofertas_abaixo(dados, voo["preco_maximo"])
-            print(f"{rota}: {len(ofertas)} oferta(s) abaixo de R$ {voo['preco_maximo']}")
-            if ofertas:
-                link = dados.get("search_metadata", {}).get("google_flights_url", "")
-                alertas.append(descrever(voo, ofertas, link))
-        except Exception as erro:  # uma rota com problema não impede as outras
-            falhas += 1
-            print(f"{rota}: erro na consulta: {erro}")
+        for voo in lote(todas, por_execucao, agora):
+            rota = f"{voo['origem']}-{voo['destino']} ida {voo['data_ida']} volta {voo['data_volta']}"
+            try:
+                dados = buscar(voo)
+                ofertas = ofertas_abaixo(dados, voo["preco_maximo"])
+                print(f"{rota}: {len(ofertas)} oferta(s) abaixo de R$ {voo['preco_maximo']}")
+                if ofertas:
+                    link = dados.get("search_metadata", {}).get("google_flights_url", "")
+                    alertas.append(descrever(voo, ofertas, link))
+            except Exception as erro:  # uma busca com problema não impede as outras
+                falhas += 1
+                print(f"{rota}: erro na consulta: {erro}")
 
     if alertas:
         enviar_email("\n\n".join(alertas))

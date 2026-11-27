@@ -1,12 +1,15 @@
 {
+  "buscas_por_execucao": 2,
   "voos": [
     {
       "origem": "GIG",
-      "destino": "LIS",
-      "data_ida": "2027-03-10",
-      "data_volta": "2027-03-20",
+      "destino": "POA",
+      "data_ida": "2026-12-17",
+      "data_ida_ate": "2026-12-19",
+      "data_volta": "2026-12-27",
+      "data_volta_ate": "2026-12-29",
       "adultos": 1,
-      "preco_maximo": 4000
+      "preco_maximo": 600
     }
   ]
 }
