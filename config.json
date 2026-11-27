@@ -1,0 +1,12 @@
+{
+  "voos": [
+    {
+      "origem": "GIG",
+      "destino": "LIS",
+      "data_ida": "2027-03-10",
+      "data_volta": "2027-03-20",
+      "adultos": 1,
+      "preco_maximo": 4000
+    }
+  ]
+}
