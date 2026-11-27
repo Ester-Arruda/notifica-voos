@@ -2,9 +2,9 @@
   "voos": [
     {
       "origem": "GIG",
-      "destino": "LIS",
-      "data_ida": "2027-03-10",
-      "data_volta": "2027-03-20",
+      "destino": "POA",
+      "data_ida": "2026-12-18",
+      "data_volta": "2026-12-31",
       "adultos": 1,
       "preco_maximo": 4000
     }
